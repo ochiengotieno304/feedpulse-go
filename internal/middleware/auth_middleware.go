@@ -33,7 +33,7 @@ func RapidProxySecretCheck(next http.Handler) http.Handler {
 
 		secret := configs.RapidApiProySecret
 
-		if proxySecret == "" && secret != proxySecret {
+		if proxySecret == "" || secret != proxySecret {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Forbidden"))
 			return
