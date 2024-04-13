@@ -24,7 +24,7 @@ type Body struct {
 	Country  string
 	Category string
 	Page     int32
-	PerPage  int32
+	PerPage  int32 `json:"per_page"`
 }
 
 func (s *feedStore) GetAll(r io.ReadCloser) (*[]models.News, error) {
