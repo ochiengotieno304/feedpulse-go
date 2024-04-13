@@ -9,7 +9,7 @@ import (
 
 func RapidProxySecretCheck(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		proxySecret := r.Header.Get("HTTP_X_MASHAPE_PROXY_SECRET")
+		proxySecret := r.Header.Get("X-Mashape-Proxy-Secret")
 		configs, err := configs.LoadConfig()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
