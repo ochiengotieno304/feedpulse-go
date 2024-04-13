@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
-	"io"
+	"strconv"
+	// "io"
+	"net/http"
 	"strings"
 
 	"github.com/ochiengotieno304/feedpulse-go/configs"
@@ -11,7 +13,7 @@ import (
 )
 
 type FeedStore interface {
-	GetAll(r io.ReadCloser) (*[]models.News, error)
+	GetAll(r *http.Request) (*[]models.News, error)
 }
 
 type feedStore struct{}
@@ -20,30 +22,22 @@ func NewFeedStore() FeedStore {
 	return &feedStore{}
 }
 
-type Body struct {
-	Country  string
-	Category string
-	Page     int32
-	PerPage  int32 `json:"per_page"`
-}
-
-func (s *feedStore) GetAll(r io.ReadCloser) (*[]models.News, error) {
-	var body Body
-
-	err := json.NewDecoder(r).Decode(&body)
-	if err != nil {
-		return nil, err
-	}
-
-	country, category, page, perPage := strings.ToUpper(body.Country), strings.ToUpper(body.Category), int(body.Page), int(body.PerPage)
-
-	if page == 0 {
+func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
+	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 32)
+	if page == 0 || err != nil {
 		page = 1
 	}
 
-	if perPage == 0 {
-		perPage = 10
+	pageSize, err := strconv.ParseInt(r.URL.Query().Get("page_size"), 10, 32)
+	if pageSize == 0 || err != nil {
+		pageSize = 10
 	}
+
+	country, category, page, perPage :=
+		strings.ToUpper(r.URL.Query().Get("country")),
+		strings.ToUpper(r.URL.Query().Get("category")),
+		page,
+		pageSize
 
 	if country == "" {
 		country = "KE"
@@ -55,7 +49,7 @@ func (s *feedStore) GetAll(r io.ReadCloser) (*[]models.News, error) {
 
 	var news *[]models.News
 
-	if err := configs.DB.Order("published_date desc").Where("category LIKE ? AND code = ?", fmt.Sprintf("%s%s%s", "%", category, "%"), country).Limit(perPage).Offset((page - 1) * perPage).Find(&news).Error; err != nil {
+	if err := configs.DB.Order("published_date desc").Where("category LIKE ? AND code = ?", fmt.Sprintf("%s%s%s", "%", category, "%"), country).Limit(int(perPage)).Offset(int((page - 1) * perPage)).Find(&news).Error; err != nil {
 		return nil, err
 	}
 

@@ -9,7 +9,7 @@ type FeedHandler struct{}
 
 func (FeedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	feedStore := NewFeedStore()
-	news, err := feedStore.GetAll(r.Body)
+	news, err := feedStore.GetAll(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
