@@ -1,23 +1,63 @@
 package handlers
 
-// import (
-// 	"github.com/ochiengotieno304/feedpulse-go/pkg/models"
-// )
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"strings"
 
-// type FeedStore interface {
-// 	GetFeeds() (*models.Feed, error)
-// }
+	"github.com/ochiengotieno304/feedpulse-go/configs"
+	"github.com/ochiengotieno304/feedpulse-go/pkg/models"
+)
 
-// type feedStore struct{}
+type FeedStore interface {
+	GetAll(r io.ReadCloser) (*[]models.News, error)
+}
 
-// func NewFeedStore() FeedStore {
-// 	return &feedStore{}
-// }
+type feedStore struct{}
 
-// func (*feedStore) GetFeeds() (*models.Feed, error) {
-// 	return nil, nil
-// }
+func NewFeedStore() FeedStore {
+	return &feedStore{}
+}
 
-// // func (*feedStore) GetFeedsByCountryCode(w http.ResponseWriter, r *http.Request) (*models.Feed, error) {
-// // 	return nil, nil
-// // }
+type Body struct {
+	Country  string
+	Category string
+	Page     int32
+	PerPage  int32
+}
+
+func (s *feedStore) GetAll(r io.ReadCloser) (*[]models.News, error) {
+	var body Body
+
+	err := json.NewDecoder(r).Decode(&body)
+	if err != nil {
+		return nil, err
+	}
+
+	country, category, page, perPage := strings.ToUpper(body.Country), strings.ToUpper(body.Category), int(body.Page), int(body.PerPage)
+
+	if page == 0 {
+		page = 1
+	}
+
+	if perPage == 0 {
+		perPage = 10
+	}
+
+	if country == "" {
+		country = "KE"
+	}
+
+	if category == "" {
+		category = "NEWS"
+	}
+
+	var news *[]models.News
+
+	if err := configs.DB.Where("category LIKE ? AND code = ?", fmt.Sprintf("%s%s%s", "%", category, "%"), country).Limit(perPage).Offset((page - 1) * perPage).Find(&news).Error; err != nil {
+		return nil, err
+	}
+
+	return news, nil
+}

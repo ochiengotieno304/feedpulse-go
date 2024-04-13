@@ -14,11 +14,10 @@ func init() {
 
 func main() {
 	mux := http.NewServeMux()
-	newsController := handlers.FeedHandler{}
+	feedHandler := handlers.FeedHandler{}
 
-	mux.Handle("GET /api/feeds", newsController)
+	mux.Handle("GET /api/feeds", feedHandler)
 
 	log.Println("Listening on port 7000")
 	http.ListenAndServe(":7000", mux)
-	// log.Fatal(http.ListenAndServe(":7000", mux))
 }
