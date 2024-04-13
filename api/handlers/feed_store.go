@@ -14,6 +14,7 @@ import (
 
 type FeedStore interface {
 	GetAll(r *http.Request) (*[]models.News, error)
+	GetSingle(r *http.Request) (*models.News, error)
 }
 
 type feedStore struct{}
@@ -54,4 +55,21 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 	}
 
 	return news, nil
+}
+
+func (s *feedStore) GetSingle(r *http.Request) (*models.News, error) {
+
+	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+
+	var feed models.News
+
+	if err != nil {
+		id = 1
+	}
+
+	if err := configs.DB.First(&feed, id).Error; err != nil {
+		return nil, err
+	}
+
+	return &feed, nil
 }

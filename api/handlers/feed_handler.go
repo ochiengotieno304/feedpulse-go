@@ -5,7 +5,8 @@ import (
 	"net/http"
 )
 
-type FeedHandler struct{}
+type FeedHandler struct {
+}
 
 func (FeedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	feedStore := NewFeedStore()
@@ -21,6 +22,25 @@ func (FeedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(&news); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+}
+
+func GetSingleFeedHandler(w http.ResponseWriter, r *http.Request) {
+	feedStore := NewFeedStore()
+	feed, err := feedStore.GetSingle(r)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(&feed); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
 		return

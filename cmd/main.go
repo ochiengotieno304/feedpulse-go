@@ -16,8 +16,10 @@ func init() {
 func main() {
 	mux := http.NewServeMux()
 	feedHandler := handlers.FeedHandler{}
+	getSingleFeedHandler := http.HandlerFunc(handlers.GetSingleFeedHandler)
 
 	mux.Handle("GET /api/feeds", middleware.RapidProxySecretCheck(feedHandler))
+	mux.Handle("GET /api/feeds/{id}", middleware.RapidProxySecretCheck(getSingleFeedHandler))
 
 	log.Println("Listening on port 7000")
 	http.ListenAndServe(":7000", mux)
