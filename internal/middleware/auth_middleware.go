@@ -3,23 +3,9 @@ package middleware
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ochiengotieno304/feedpulse-go/configs"
 )
-
-func ProfilerMiddleware(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Get("")
-		begin := time.Now().UnixMilli()
-		next.ServeHTTP(w, r)
-		end := time.Now().UnixMilli()
-		ns := end - begin
-		fmt.Printf("Request is processed in %d milliseconds\n", ns)
-	}
-
-	return http.HandlerFunc(fn)
-}
 
 func RapidProxySecretCheck(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -45,5 +31,3 @@ func RapidProxySecretCheck(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(fn)
 }
-
-// HTTP_X_MASHAPE_PROXY_SECRET
