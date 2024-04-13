@@ -55,7 +55,7 @@ func (s *feedStore) GetAll(r io.ReadCloser) (*[]models.News, error) {
 
 	var news *[]models.News
 
-	if err := configs.DB.Where("category LIKE ? AND code = ?", fmt.Sprintf("%s%s%s", "%", category, "%"), country).Limit(perPage).Offset((page - 1) * perPage).Find(&news).Error; err != nil {
+	if err := configs.DB.Order("published_date desc").Where("category LIKE ? AND code = ?", fmt.Sprintf("%s%s%s", "%", category, "%"), country).Limit(perPage).Offset((page - 1) * perPage).Find(&news).Error; err != nil {
 		return nil, err
 	}
 
