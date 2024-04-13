@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 // import (
 // 	"github.com/ochiengotieno304/feedpulse-go/pkg/models"
