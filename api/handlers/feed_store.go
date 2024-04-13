@@ -28,7 +28,7 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 		page = 1
 	}
 
-	pageSize, err := strconv.ParseInt(r.URL.Query().Get("page_size"), 10, 32)
+	pageSize, err := strconv.ParseInt(r.URL.Query().Get("per_page"), 10, 32)
 	if pageSize == 0 || err != nil {
 		pageSize = 10
 	}
