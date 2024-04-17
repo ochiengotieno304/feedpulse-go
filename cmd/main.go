@@ -28,6 +28,6 @@ func main() {
 	mux.Handle("GET /api/feeds/{id}", middleware.RapidProxySecretCheck(getSingleFeedHandler))
 	mux.Handle("GET /health", http.HandlerFunc(healthCheckHandler))
 
-	log.Println("Listening on port 7000")
-	http.ListenAndServe(":7000", mux)
+	log.Println("Listening on port 8080")
+	http.ListenAndServe(":8080", mux)
 }
