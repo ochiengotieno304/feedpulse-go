@@ -5,13 +5,8 @@ import (
 	"net/http"
 
 	"github.com/ochiengotieno304/feedpulse-go/api/handlers"
-	"github.com/ochiengotieno304/feedpulse-go/configs"
 	"github.com/ochiengotieno304/feedpulse-go/internal/middleware"
 )
-
-func init() {
-	configs.ConnectDatabase()
-}
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
