@@ -3,13 +3,16 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/ochiengotieno304/feedpulse-go/pkg/stores"
 )
 
 type FeedHandler struct {
 }
 
+var feedStore = stores.NewFeedStore()
+
 func (FeedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	feedStore := NewFeedStore()
 	news, err := feedStore.GetAll(r)
 
 	if err != nil {
@@ -29,7 +32,6 @@ func (FeedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetSingleFeedHandler(w http.ResponseWriter, r *http.Request) {
-	feedStore := NewFeedStore()
 	feed, err := feedStore.GetSingle(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
