@@ -110,7 +110,7 @@ func (s *feedStore) GetSingle(r *http.Request) (*models.News, error) {
 		id = 1
 	}
 
-	if err := s.db.QueryRow(s.ctx, "SELECT * FROM news WHERE id=$1", id).Scan(
+	if err := s.db.QueryRow(s.ctx, "SELECT id, title, snippet, url, source, code, category, published_date FROM news WHERE id=$1", id).Scan(
 		&feed.ID,
 		&feed.Title,
 		&feed.Snippet,
