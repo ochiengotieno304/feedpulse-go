@@ -25,8 +25,6 @@ func RapidProxySecretCheck(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
-
-		fmt.Println("Check Complete")
 	}
 
 	return http.HandlerFunc(fn)
