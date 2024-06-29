@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/ochiengotieno304/feedpulse-go/pkg/models"
 	"github.com/ochiengotieno304/feedpulse-go/pkg/stores"
@@ -12,8 +13,9 @@ type FeedHandler struct {
 }
 
 type newsResponse struct {
-	Count int            `json:"count,omitempty"`
-	Feeds *[]models.News `json:"feeds,omitempty"`
+	Page     string         `json:"page,omitempty"`
+	PageSize string         `json:"page_size,omitempty"`
+	Feeds    *[]models.News `json:"feeds,omitempty"`
 }
 
 var feedStore = stores.NewFeedStore()
@@ -22,8 +24,9 @@ func (FeedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	news, err := feedStore.GetAll(r)
 
 	response := newsResponse{
-		Feeds: news,
-		Count: len(*news),
+		Feeds:    news,
+		Page:     r.URL.Query().Get("page"),
+		PageSize: strconv.Itoa(len(*news)),
 	}
 
 	if err != nil {

@@ -18,9 +18,14 @@ func main() {
 	mux := http.NewServeMux()
 	feedHandler := handlers.FeedHandler{}
 	getSingleFeedHandler := http.HandlerFunc(handlers.GetSingleFeedHandler)
+	getSupportedCountriesHandler := http.HandlerFunc(handlers.CountryHandler)
 
+	// AUTHENTICATED
 	mux.Handle("GET /api/feeds", middleware.RapidProxySecretCheck(feedHandler))
 	mux.Handle("GET /api/feeds/{id}", middleware.RapidProxySecretCheck(getSingleFeedHandler))
+	mux.Handle("GET /api/countries", middleware.RapidProxySecretCheck(getSupportedCountriesHandler))
+
+	// UNAUTHENTICATED
 	mux.Handle("GET /health", http.HandlerFunc(healthCheckHandler))
 
 	log.Println("Listening on port 8080")
