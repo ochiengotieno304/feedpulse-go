@@ -29,7 +29,6 @@ func NewFeedStore() FeedStore {
 }
 
 func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
-	var queryString string
 	var rows pgx.Rows
 
 	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 32)
@@ -38,8 +37,15 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 	}
 
 	pageSize, err := strconv.ParseInt(r.URL.Query().Get("per_page"), 10, 32)
-	if pageSize == 0 || err != nil {
+	if err != nil {
 		pageSize = 10
+	}
+
+	switch {
+	case pageSize > 100:
+		pageSize = 100
+	case pageSize < 5:
+		pageSize = 5
 	}
 
 	country, category :=
@@ -49,31 +55,43 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 	countryPresent := len(country) > 0
 	categoryPresent := len(category) > 0
 
-	if countryPresent && categoryPresent {
-		queryString = "SELECT id, title, snippet, url, source, code, category, published_date FROM news WHERE code=$1 AND category LIKE '%' || $2 || '%' ORDER BY date DESC LIMIT $3 OFFSET $4;"
-		rows, err = s.db.Query(s.ctx, queryString, country, category, pageSize, page)
-		if err != nil {
-			return nil, err
-		}
-	} else if countryPresent {
-		queryString = "SELECT id, title, snippet, url, source, code, category, published_date FROM news WHERE code=$1 ORDER BY date DESC LIMIT $2 OFFSET $3;"
-		rows, err = s.db.Query(s.ctx, queryString, country, pageSize, page)
-		if err != nil {
-			return nil, err
-		}
-	} else if categoryPresent {
-		queryString = "SELECT id, title, snippet, url, source, code, category, published_date FROM news WHERE category LIKE  '%' || $1 || '%' ORDER BY date DESC LIMIT $2 OFFSET $3;"
-		rows, err = s.db.Query(s.ctx, queryString, category, pageSize, page)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		country = "KE"
-		queryString = "SELECT id, title, snippet, url, source, code, category, published_date FROM news WHERE code=$1 ORDER BY date DESC LIMIT $2 OFFSET $3;"
-		rows, err = s.db.Query(s.ctx, queryString, country, pageSize, page)
-		if err != nil {
-			return nil, err
-		}
+	// Initialize the base query
+	baseQuery := `
+			SELECT id, title, snippet, url, source, code, category, published_date
+			FROM news
+			WHERE 1=1`
+
+	// Slice to store query parameters
+	var queryParams []interface{}
+	var queryIndex int
+
+	// Check for country presence
+	if countryPresent {
+		queryIndex++
+		baseQuery += ` AND code = $` + strconv.Itoa(queryIndex)
+		queryParams = append(queryParams, country)
+	}
+
+	// Check for category presence
+	if categoryPresent {
+		queryIndex++
+		baseQuery += ` AND category LIKE '%' || $` + strconv.Itoa(queryIndex) + ` || '%'`
+		queryParams = append(queryParams, category)
+	}
+
+	// Add ORDER BY, LIMIT, and OFFSET
+	queryIndex++
+	baseQuery += ` ORDER BY published_date DESC LIMIT $` + strconv.Itoa(queryIndex)
+	queryParams = append(queryParams, pageSize)
+
+	queryIndex++
+	baseQuery += ` OFFSET $` + strconv.Itoa(queryIndex)
+	queryParams = append(queryParams, page)
+
+	// Execute the query
+	rows, err = s.db.Query(s.ctx, baseQuery, queryParams...)
+	if err != nil {
+		return nil, err
 	}
 
 	defer rows.Close()
