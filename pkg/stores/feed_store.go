@@ -104,6 +104,7 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 	}
 
 	defer rows.Close()
+	var languageCode *string
 
 	var feeds []models.News
 	for rows.Next() {
@@ -116,10 +117,14 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 			&feed.Source,
 			&feed.Code,
 			&feed.Category,
-			&feed.Language,
+			&languageCode,
 			&feed.PublishedDate,
 		); err != nil {
 			return nil, err
+		}
+
+		if languageCode != nil {
+			feed.Language = *languageCode
 		}
 
 		feeds = append(feeds, feed)
@@ -138,7 +143,7 @@ func (s *feedStore) GetSingle(r *http.Request) (*models.News, error) {
 		id = 1
 	}
 
-	if err := s.db.QueryRow(s.ctx, "SELECT id, title, snippet, url, source, code, category, published_date FROM news WHERE id=$1", id).Scan(
+	if err := s.db.QueryRow(s.ctx, "SELECT id, title, snippet, url, source, code, category, language, published_date FROM news WHERE id=$1", id).Scan(
 		&feed.ID,
 		&feed.Title,
 		&feed.Snippet,
@@ -146,6 +151,7 @@ func (s *feedStore) GetSingle(r *http.Request) (*models.News, error) {
 		&feed.Source,
 		&feed.Code,
 		&feed.Category,
+		&feed.Language,
 		&feed.PublishedDate,
 	); err != nil {
 		return nil, err
