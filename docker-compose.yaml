@@ -1,11 +1,9 @@
-version: '3.9'
-
 services:
   api-server:
     build:
       context: .
     container_name: feedpulse_go
     ports:
-      - "7050:7000"
+      - "8080:8080"
     env_file:
       - .env

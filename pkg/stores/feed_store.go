@@ -48,16 +48,18 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 		pageSize = 5
 	}
 
-	country, category :=
+	country, category, language :=
 		strings.ToUpper(r.URL.Query().Get("country")),
-		strings.ToUpper(r.URL.Query().Get("category"))
+		strings.ToUpper(r.URL.Query().Get("category")),
+		strings.ToLower(r.URL.Query().Get("language"))
 
 	countryPresent := len(country) > 0
 	categoryPresent := len(category) > 0
+	languagePresent := len(language) > 0
 
 	// Initialize the base query
 	baseQuery := `
-			SELECT id, title, snippet, url, source, code, category, published_date
+			SELECT id, title, snippet, url, source, code, category, language, published_date
 			FROM news
 			WHERE 1=1`
 
@@ -77,6 +79,13 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 		queryIndex++
 		baseQuery += ` AND category LIKE '%' || $` + strconv.Itoa(queryIndex) + ` || '%'`
 		queryParams = append(queryParams, category)
+	}
+
+	// Check for language presence
+	if languagePresent {
+		queryIndex++
+		baseQuery += ` AND language = $` + strconv.Itoa(queryIndex)
+		queryParams = append(queryParams, language)
 	}
 
 	// Add ORDER BY, LIMIT, and OFFSET
@@ -107,6 +116,7 @@ func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
 			&feed.Source,
 			&feed.Code,
 			&feed.Category,
+			&feed.Language,
 			&feed.PublishedDate,
 		); err != nil {
 			return nil, err
