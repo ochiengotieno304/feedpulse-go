@@ -24,7 +24,10 @@ func NewFeedStore() FeedStore {
 
 func (s *feedStore) ReadAll(filters map[string]string, page, pageSize int) ([]*models.News, error) {
 	var feeds []*models.News
-	if err := utils.QueryBuilder(filters, s.db).Scopes(utils.Paginate(page, pageSize)).Find(&feeds).Order("published_date DESC").Error; err != nil {
+	if err := utils.QueryBuilder(filters, s.db).
+		Scopes(utils.Paginate(page, pageSize)).
+		Order("published_date DESC").
+		Find(&feeds).Error; err != nil {
 		return nil, err
 	}
 

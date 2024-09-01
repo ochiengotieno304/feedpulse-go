@@ -38,14 +38,15 @@ func ValidatePageSize(s string) int {
 	return pageSize
 }
 
-func QueryBuilder(m map[string]string, db *gorm.DB) *gorm.DB {
-	for k, v := range m {
-		if len(v) > 0 {
-			db.Where(k + " = ?" + v)
+func QueryBuilder(filters map[string]string, db *gorm.DB) *gorm.DB {
+	query := db
+	for key, value := range filters {
+		if len(value) > 0 {
+			query = query.Where(key+" = ?", value)
 		}
 	}
 
-	return db
+	return query
 }
 
 func Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
@@ -57,4 +58,3 @@ func Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
 	// usage
 	// db.Scopes(Paginate(r)).Find(&articles)
 }
-

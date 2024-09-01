@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type News struct {
 	ID            int64  `json:"id,omitempty"`
 	Title         string `json:"title,omitempty"`
@@ -9,7 +11,7 @@ type News struct {
 	Code          string `json:"country,omitempty"`
 	Category      string `json:"category,omitempty"`
 	Language      string `json:"language,omitempty"`
-	PublishedDate string `json:"published_date,omitempty"`
+	PublishedDate time.Time `json:"published_date,omitempty"`
 }
 
 type Response struct {

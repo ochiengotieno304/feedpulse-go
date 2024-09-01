@@ -34,7 +34,7 @@ func (*feedHandler) ReadAllFeedsHandler(w http.ResponseWriter, r *http.Request) 
 		strings.ToLower(r.URL.Query().Get("language"))
 
 	filters := make(map[string]string, 0)
-	filters["country"] = country
+	filters["code"] = country
 	filters["category"] = category
 	filters["language"] = language
 
