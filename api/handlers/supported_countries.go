@@ -14,7 +14,7 @@ type Country struct {
 	Code interface{} `json:"code,omitempty"`
 }
 
-func CountryHandler(w http.ResponseWriter, r *http.Request) {
+func SupportedCountryHandler(w http.ResponseWriter, r *http.Request) {
 	countries := map[string]interface{}{
 		"Argentina":      "AR",
 		"Australia":      "AU",

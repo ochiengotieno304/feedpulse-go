@@ -1,161 +1,40 @@
 package stores
 
 import (
-	"context"
-	"net/http"
-	"strconv"
-	"strings"
-
-	"github.com/jackc/pgx/v5"
+	"github.com/ochiengotieno304/feedpulse-go/internal/utils"
 	"github.com/ochiengotieno304/feedpulse-go/pkg/db"
 	"github.com/ochiengotieno304/feedpulse-go/pkg/models"
+	"gorm.io/gorm"
 )
 
 type FeedStore interface {
-	GetAll(r *http.Request) (*[]models.News, error)
-	GetSingle(r *http.Request) (*models.News, error)
+	ReadAll(filters map[string]string, page, pageSize int) ([]*models.News, error)
+	Read(feedID int) (*models.News, error)
 }
 
 type feedStore struct {
-	db  *pgx.Conn
-	ctx context.Context
+	db *gorm.DB
 }
 
 func NewFeedStore() FeedStore {
 	return &feedStore{
-		db:  db.DB(),
-		ctx: context.Background(),
+		db: db.DB(),
 	}
 }
 
-func (s *feedStore) GetAll(r *http.Request) (*[]models.News, error) {
-	var rows pgx.Rows
-
-	page, err := strconv.ParseInt(r.URL.Query().Get("page"), 10, 32)
-	if page == 0 || err != nil {
-		page = 1
-	}
-
-	pageSize, err := strconv.ParseInt(r.URL.Query().Get("per_page"), 10, 32)
-	if err != nil {
-		pageSize = 10
-	}
-
-	switch {
-	case pageSize > 100:
-		pageSize = 100
-	case pageSize < 5:
-		pageSize = 5
-	}
-
-	country, category, language :=
-		strings.ToUpper(r.URL.Query().Get("country")),
-		strings.ToUpper(r.URL.Query().Get("category")),
-		strings.ToLower(r.URL.Query().Get("language"))
-
-	countryPresent := len(country) > 0
-	categoryPresent := len(category) > 0
-	languagePresent := len(language) > 0
-
-	// Initialize the base query
-	baseQuery := `
-			SELECT id, title, snippet, url, source, code, category, language, published_date
-			FROM news
-			WHERE 1=1`
-
-	// Slice to store query parameters
-	var queryParams []interface{}
-	var queryIndex int
-
-	// Check for country presence
-	if countryPresent {
-		queryIndex++
-		baseQuery += ` AND code = $` + strconv.Itoa(queryIndex)
-		queryParams = append(queryParams, country)
-	}
-
-	// Check for category presence
-	if categoryPresent {
-		queryIndex++
-		baseQuery += ` AND category LIKE '%' || $` + strconv.Itoa(queryIndex) + ` || '%'`
-		queryParams = append(queryParams, category)
-	}
-
-	// Check for language presence
-	if languagePresent {
-		queryIndex++
-		baseQuery += ` AND language = $` + strconv.Itoa(queryIndex)
-		queryParams = append(queryParams, language)
-	}
-
-	// Add ORDER BY, LIMIT, and OFFSET
-	queryIndex++
-	baseQuery += ` ORDER BY published_date DESC LIMIT $` + strconv.Itoa(queryIndex)
-	queryParams = append(queryParams, pageSize)
-
-	queryIndex++
-	baseQuery += ` OFFSET $` + strconv.Itoa(queryIndex)
-	queryParams = append(queryParams, page)
-
-	// Execute the query
-	rows, err = s.db.Query(s.ctx, baseQuery, queryParams...)
-	if err != nil {
+func (s *feedStore) ReadAll(filters map[string]string, page, pageSize int) ([]*models.News, error) {
+	var feeds []*models.News
+	if err := utils.QueryBuilder(filters, s.db).Scopes(utils.Paginate(page, pageSize)).Find(&feeds).Order("published_date DESC").Error; err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
-	var languageCode *string
-
-	var feeds []models.News
-	for rows.Next() {
-		var feed models.News
-		if err := rows.Scan(
-			&feed.ID,
-			&feed.Title,
-			&feed.Snippet,
-			&feed.URL,
-			&feed.Source,
-			&feed.Code,
-			&feed.Category,
-			&languageCode,
-			&feed.PublishedDate,
-		); err != nil {
-			return nil, err
-		}
-
-		if languageCode != nil {
-			feed.Language = *languageCode
-		}
-
-		feeds = append(feeds, feed)
-	}
-
-	return &feeds, err
+	return feeds, nil
 }
 
-func (s *feedStore) GetSingle(r *http.Request) (*models.News, error) {
-
-	id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
-
+func (s *feedStore) Read(feedID int) (*models.News, error) {
 	var feed models.News
-
-	if err != nil {
-		id = 1
-	}
-
-	if err := s.db.QueryRow(s.ctx, "SELECT id, title, snippet, url, source, code, category, language, published_date FROM news WHERE id=$1", id).Scan(
-		&feed.ID,
-		&feed.Title,
-		&feed.Snippet,
-		&feed.URL,
-		&feed.Source,
-		&feed.Code,
-		&feed.Category,
-		&feed.Language,
-		&feed.PublishedDate,
-	); err != nil {
+	if err := s.db.First(&feed, feedID).Error; err != nil {
 		return nil, err
 	}
-
 	return &feed, nil
 }

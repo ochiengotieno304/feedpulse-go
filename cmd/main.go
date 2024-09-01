@@ -16,14 +16,16 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	mux := http.NewServeMux()
-	feedHandler := handlers.FeedHandler{}
-	getSingleFeedHandler := http.HandlerFunc(handlers.GetSingleFeedHandler)
-	getSupportedCountriesHandler := http.HandlerFunc(handlers.CountryHandler)
+	feedHandlers := handlers.NewFeedHandlers()
+
+	readFeedHandler := http.HandlerFunc(feedHandlers.ReadSingleFeedHandler)
+	readAllFeads := http.HandlerFunc(feedHandlers.ReadAllFeedsHandler)
+	countriesHandler := http.HandlerFunc(handlers.SupportedCountryHandler)
 
 	// AUTHENTICATED
-	mux.Handle("GET /api/feeds", middleware.RapidProxySecretCheck(feedHandler))
-	mux.Handle("GET /api/feeds/{id}", middleware.RapidProxySecretCheck(getSingleFeedHandler))
-	mux.Handle("GET /api/countries", middleware.RapidProxySecretCheck(getSupportedCountriesHandler))
+	mux.Handle("GET /api/feeds", middleware.RapidProxySecretCheck(readAllFeads))
+	mux.Handle("GET /api/feeds/{id}", middleware.RapidProxySecretCheck(readFeedHandler))
+	mux.Handle("GET /api/countries", middleware.RapidProxySecretCheck(countriesHandler))
 
 	// UNAUTHENTICATED
 	mux.Handle("GET /health", http.HandlerFunc(healthCheckHandler))
