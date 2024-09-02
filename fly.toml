@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for feedpulse-go on 2024-04-17T10:19:43+03:00
+# fly.toml app configuration file generated for feedpulse-go on 2024-09-01T21:57:10+03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -11,7 +11,7 @@ primary_region = 'jnb'
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 1
   processes = ['app']
