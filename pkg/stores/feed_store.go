@@ -27,6 +27,7 @@ func (s *feedStore) ReadAll(filters map[string]string, page, pageSize int) ([]*m
 	if err := utils.QueryBuilder(filters, s.db).
 		Scopes(utils.Paginate(page, pageSize)).
 		Order("published_date DESC").
+		Select("ID", "Title", "Snippet", "URL", "Source", "Code", "Category", "Language", "PublishedDate", "PictureURL").
 		Find(&feeds).Error; err != nil {
 		return nil, err
 	}

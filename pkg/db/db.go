@@ -15,7 +15,8 @@ func init() {
 	utils.ErrorHandler(err)
 
 	db, err = gorm.Open(postgres.Open(config.DatabaseUrl), &gorm.Config{
-		PrepareStmt: true,
+		PrepareStmt:            true,
+		SkipDefaultTransaction: true,
 	})
 	utils.ErrorHandler(err)
 }
